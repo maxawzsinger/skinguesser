@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import filenames from './champSplashFileNames'
 import champnames from './champnames.json'
 
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
+import {initializeApp} from "firebase/app";
+import {getDatabase, ref, set, get, child} from "firebase/database";
+
 
 const inputStyle = {
     fontSize: "28px",
@@ -15,21 +16,12 @@ const inputStyle = {
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-// const firebaseConfig = {
-//   apiKey: "AIzaSyD-l4xhHARU3rrVXjuW_7olQVmHzCkZJKM",
-//   authDomain: "lolproject-9564e.firebaseapp.com",
-//   databaseURL: "https://lolproject-9564e-default-rtdb.asia-southeast1.firebasedatabase.app",
-//   projectId: "lolproject-9564e",
-//   storageBucket: "lolproject-9564e.appspot.com",
-//   messagingSenderId: "610188733937",
-//   appId: "1:610188733937:web:b33f9ba4d4cd7eef736850",
-//   measurementId: "G-359RL33Z11"
-// };
-//
-// // Initialize Firebase
-// const app = initializeApp(firebaseConfig);
-// const analytics = getAnalytics(app);
-// var database = app.database();
+
+// Initialize Firebase
+
+
+
+
 
 
 
@@ -41,6 +33,45 @@ function Game() {
     const [score, setScore] = useState(0);
     const [lives, setLives] = useState(3);
     const [highscores, setHighscores] = useState([]);
+    const [screenType, setScreenType] = useState('play');
+    const [placement, setPlacement] = useState(0);
+    const [playerName, setPlayerName] = useState('');
+    console.log('rerender');
+
+    const config = {
+      apiKey: "AIzaSyD-l4xhHARU3rrVXjuW_7olQVmHzCkZJKM",
+      authDomain: "lolproject-9564e.firebaseapp.com",
+      databaseURL: "https://lolproject-9564e-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "lolproject-9564e",
+      storageBucket: "lolproject-9564e.appspot.com",
+      messagingSenderId: "610188733937",
+      appId: "1:610188733937:web:b33f9ba4d4cd7eef736850",
+      measurementId: "G-359RL33Z11"
+    };
+
+
+    const app = initializeApp(config);
+    const dbRef = ref(getDatabase());
+    console.log(app);
+
+
+    function getUserData() {
+      get(child(dbRef, 'highscores')).then((snapshot)=> {
+        console.log(snapshot.val());
+      });
+      // let highscoresRef = db.ref("highscores");
+      // highscoresRef.on("value",snapshot => {
+      //   const scores = snapshot.val();
+      //   setHighscores([...highscores,...scores]);
+      //   console.log('scoress: ',scores);
+      // })
+      // let champDataRef = db.ref(`win data/${filename.substring(0, filename.length - 4)}`)
+      // champDataRef.on("value", snapshot => {
+      //   const avg = (snapshot.val()['wins'] / snapshot.val()['tries']);
+      //   console.log('avg: ', avg);
+      // })
+
+    }
 
     useEffect(() => {
         loadNewChamp()
@@ -56,10 +87,13 @@ function Game() {
     }, {});
 
     const gameOver = () => {
-        alert(`Game Over! \n\nThe correct answer was ${champname}.\n\nYou made it through ${score} out of 1481 splash arts.`)
-        setLives(3)
-        setScore(0)
-        loadNewChamp()
+        getUserData();
+        setLives(3);
+        setScore(0);
+        loadNewChamp();
+        setScreenType('end');
+
+
     }
 
     const loadNewChamp = () => {
@@ -139,6 +173,11 @@ function Game() {
         }
     }
 
+    function handleSubmitPlayerHighScore() {
+      console.log('submitting high score for : ', playerName);
+    }
+
+if (screenType == 'play') {
     return (
         <div className="App">
 
@@ -175,6 +214,56 @@ function Game() {
             </div>
         </div>
     );
+  } else {
+    return (
+      <div className="App">
+
+          <div style={{
+              "height": "10vh",
+              "display": "flex",
+              "alignItems": "center",
+              "justifyContent": "space-between",
+              "fontSize": "40px",
+              "fontWeight": 600,
+
+          }}>
+              <div>{score}</div>
+              <div style={{display: 'flex'}}>
+                  <div style={{width: "50px", opacity: lives >= 3 ? 1 : 0.3}}><svg style={{transform: "scale(2)"}} xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#ff0000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>
+                  <div style={{width: "50px", opacity: lives >= 2 ? 1 : 0.3}}><svg style={{transform: "scale(2)"}} xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#ff0000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>
+                  <div style={{width: "50px", opacity: lives >= 1 ? 1 : 0.3}}><svg style={{transform: "scale(2)"}} xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px" fill="#ff0000"><path d="M0 0h24v24H0V0z" fill="none"/><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></div>
+              </div>
+              </div>
+          <div style={{"height": "70vh"}}>
+          Game Over! The correct answer was {champname}. You made it through {score} out of 1481 splash arts.
+          {highscores.map((score) =>
+            <li>{score[0]} : {score[1]}</li>
+          )}
+          </div>
+                            <div style={{"height": "20vh"}}>
+                            <div style={{
+                                "display": "flex",
+                                "height": "20vh",
+                                "justify-content": "center",
+                                "align-items": "center"
+                            }}>
+                            { placement !== 0 &&
+                                <div>
+                                You placed {placement}/10. Enter name for high score.
+                                    <input placeholder=  "enter name" focus style={inputStyle} type="text" onChange={e => setPlayerName(e.target.value)} />
+                                    <button onClick={handleSubmitPlayerHighScore()}>
+                                    Submit high score
+                                    </button>
+                                </div>
+                            }
+                            </div>
+                            </div>
+                            <button onClick={setScreenType('play')}>
+                            Start new game
+                            </button>
+      </div>
+    )
+  }
 }
 
 export default Game;
