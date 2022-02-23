@@ -25,6 +25,16 @@ const inputStyle = {
 
 
 
+const config = {
+  apiKey: "AIzaSyD-l4xhHARU3rrVXjuW_7olQVmHzCkZJKM",
+  authDomain: "lolproject-9564e.firebaseapp.com",
+  databaseURL: "https://lolproject-9564e-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "lolproject-9564e",
+  storageBucket: "lolproject-9564e.appspot.com",
+  messagingSenderId: "610188733937",
+  appId: "1:610188733937:web:b33f9ba4d4cd7eef736850",
+  measurementId: "G-359RL33Z11"
+};
 
 
 function Game() {
@@ -36,28 +46,35 @@ function Game() {
     const [screenType, setScreenType] = useState('play');
     const [placement, setPlacement] = useState(0);
     const [playerName, setPlayerName] = useState('');
+    const [databaseRef, setDatabaseRef] = useState({});
     console.log('rerender');
 
-    const config = {
-      apiKey: "AIzaSyD-l4xhHARU3rrVXjuW_7olQVmHzCkZJKM",
-      authDomain: "lolproject-9564e.firebaseapp.com",
-      databaseURL: "https://lolproject-9564e-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "lolproject-9564e",
-      storageBucket: "lolproject-9564e.appspot.com",
-      messagingSenderId: "610188733937",
-      appId: "1:610188733937:web:b33f9ba4d4cd7eef736850",
-      measurementId: "G-359RL33Z11"
-    };
 
 
-    const app = initializeApp(config);
-    const dbRef = ref(getDatabase());
-    console.log(app);
+    function handleSubmitPlayerHighScore() {
+      if (playerName.length>0) {
+        console.log('submitting high score for : ', playerName);
+        const database = getDatabase();
+        let newHighscores = highscores;
+        newHighscores[placement][0] = playerName;
+        newHighscores[placement][1] = score;
+        console.log('logging',newHighscores);
+        set(ref(database, "highscores"), newHighscores);
+      }
+    }
 
 
-    function getUserData() {
-      get(child(dbRef, 'highscores')).then((snapshot)=> {
+    function fetchHighscores() {
+      const databaseRef = ref(getDatabase());
+      get(child(databaseRef, 'highscores')).then((snapshot)=> {
         console.log(snapshot.val());
+        let fetchedScores = snapshot.val();
+        setHighscores([...fetchedScores])
+        for (let i = 0;i<fetchedScores.length;i++) {
+          if (score > fetchedScores[i][1]) {
+            setPlacement(i);
+          }
+        }
       });
       // let highscoresRef = db.ref("highscores");
       // highscoresRef.on("value",snapshot => {
@@ -74,8 +91,11 @@ function Game() {
     }
 
     useEffect(() => {
-        loadNewChamp()
-        document.getElementsByTagName("input")[0].focus()
+      const app = initializeApp(config);
+
+
+      loadNewChamp()
+      document.getElementsByTagName("input")[0].focus()
 
         // var query = database.ref("highscores");
         // query.on("value", function(snapshot) {
@@ -87,13 +107,17 @@ function Game() {
     }, {});
 
     const gameOver = () => {
-        getUserData();
-        setLives(3);
-        setScore(0);
-        loadNewChamp();
+        fetchHighscores();
         setScreenType('end');
 
 
+    }
+
+    const handleNewGame = () => {
+      setLives(3);
+      setScore(0);
+      loadNewChamp();
+      setScreenType('play');
     }
 
     const loadNewChamp = () => {
@@ -173,9 +197,7 @@ function Game() {
         }
     }
 
-    function handleSubmitPlayerHighScore() {
-      console.log('submitting high score for : ', playerName);
-    }
+
 
 if (screenType == 'play') {
     return (
@@ -236,9 +258,12 @@ if (screenType == 'play') {
               </div>
           <div style={{"height": "70vh"}}>
           Game Over! The correct answer was {champname}. You made it through {score} out of 1481 splash arts.
-          {highscores.map((score) =>
-            <li>{score[0]} : {score[1]}</li>
+          <div>
+          Highscores:
+          {highscores.map((player) =>
+            <li>{player[0]} : {player[1]}</li>
           )}
+          </div>
           </div>
                             <div style={{"height": "20vh"}}>
                             <div style={{
@@ -251,14 +276,14 @@ if (screenType == 'play') {
                                 <div>
                                 You placed {placement}/10. Enter name for high score.
                                     <input placeholder=  "enter name" focus style={inputStyle} type="text" onChange={e => setPlayerName(e.target.value)} />
-                                    <button onClick={handleSubmitPlayerHighScore()}>
+                                    <button onClick={()=>handleSubmitPlayerHighScore()}>
                                     Submit high score
                                     </button>
                                 </div>
                             }
                             </div>
                             </div>
-                            <button onClick={setScreenType('play')}>
+                            <button onClick={()=>handleNewGame()}>
                             Start new game
                             </button>
       </div>
