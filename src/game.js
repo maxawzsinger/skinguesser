@@ -52,14 +52,15 @@ function Game() {
 
 
     function handleSubmitPlayerHighScore() {
-      if (playerName.length>0) {
+      if (playerName.length>0) { //simple check to ensure player has entered text otherwise highscore will go through with no name
         console.log('submitting high score for : ', playerName);
         const database = getDatabase();
-        let newHighscores = highscores;
-        newHighscores[placement][0] = playerName;
-        newHighscores[placement][1] = score;
+        let newHighscores = highscores; //load in array from state to modify with new high score
+        newHighscores[placement-1][0] = playerName; //placement starts from 1, to get proper array index subtract 1
+        newHighscores[placement-1][1] = score;
+        setHighscores([...newHighscores]);
         console.log('logging',newHighscores);
-        set(ref(database, "highscores"), newHighscores);
+        set(ref(database, "highscores"), newHighscores); //replace array in database with new array
       }
     }
 
@@ -69,24 +70,16 @@ function Game() {
       get(child(databaseRef, 'highscores')).then((snapshot)=> {
         console.log(snapshot.val());
         let fetchedScores = snapshot.val();
-        setHighscores([...fetchedScores])
-        for (let i = 0;i<fetchedScores.length;i++) {
+        setHighscores([...fetchedScores]) //display highscores
+        console.log('score: ', score);
+        for (let i = 0;i<fetchedScores.length;i++) { //iterate over, as soon as find a value it is higher than, replace that value.
           if (score > fetchedScores[i][1]) {
-            setPlacement(i);
+            console.log('placement: ',(i+1));
+            setPlacement(i+1);
+            break;
           }
         }
       });
-      // let highscoresRef = db.ref("highscores");
-      // highscoresRef.on("value",snapshot => {
-      //   const scores = snapshot.val();
-      //   setHighscores([...highscores,...scores]);
-      //   console.log('scoress: ',scores);
-      // })
-      // let champDataRef = db.ref(`win data/${filename.substring(0, filename.length - 4)}`)
-      // champDataRef.on("value", snapshot => {
-      //   const avg = (snapshot.val()['wins'] / snapshot.val()['tries']);
-      //   console.log('avg: ', avg);
-      // })
 
     }
 
@@ -113,7 +106,9 @@ function Game() {
 
     }
 
+
     const handleNewGame = () => {
+      setPlacement(0);
       setLives(3);
       setScore(0);
       loadNewChamp();
