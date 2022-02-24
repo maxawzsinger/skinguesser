@@ -46,17 +46,23 @@ function Game() {
     const [screenType, setScreenType] = useState('play');
     const [placement, setPlacement] = useState(0);
     const [playerName, setPlayerName] = useState('');
+    const[submitted, setSubmitted] = useState(false);
     console.log('rerender');
 
 
 
     function handleSubmitPlayerHighScore() {
       if (playerName.length>0) { //simple check to ensure player has entered text otherwise highscore will go through with no name
+        setSubmitted(true);
         console.log('submitting high score for : ', playerName);
         const database = getDatabase();
+        // arr.splice(2, 0, "Lene");
+
         let newHighscores = highscores; //load in array from state to modify with new high score
-        newHighscores[placement-1][0] = playerName; //placement starts from 1, to get proper array index subtract 1
-        newHighscores[placement-1][1] = score;
+        newHighscores.splice((placement-1),0,[playerName,score]);
+        // newHighscores[placement-1][0] = playerName; //placement starts from 1, to get proper array index subtract 1
+        // newHighscores[placement-1][1] = score;
+        newHighscores.pop();
         setHighscores([...newHighscores]);
         console.log('logging',newHighscores);
         set(ref(database, "highscores"), newHighscores); //replace array in database with new array
@@ -112,6 +118,7 @@ function Game() {
       setScore(0);
       loadNewChamp();
       setScreenType('play');
+      setSubmitted(false);
     }
 
     const loadNewChamp = () => {
@@ -269,10 +276,13 @@ if (screenType == 'play') {
             "justify-content": "center",
             "align-items": "center"
         }}>
-        { placement !== 0 &&
+        { (placement !== 0 && submitted===false) &&
             <div>
             You placed {placement}/10. Enter name for high score.
+
+            <div>
                 <input placeholder=  "enter name" focus style={inputStyle} type="text" onChange={e => setPlayerName(e.target.value)} />
+            </div>
                 <div>
                 <button onClick={()=>handleSubmitPlayerHighScore()}>
                 Submit high score
